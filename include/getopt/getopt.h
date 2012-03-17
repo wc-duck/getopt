@@ -1,0 +1,181 @@
+/* copyright (c) 2012 Fredrik Kihlander, see LICENSE for more info */
+
+#ifndef GETOPT_GETOPT_H_INCLUDED
+#define GETOPT_GETOPT_H_INCLUDED
+
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
+/*
+	File: getopt.h
+		Sumary:
+			Provides functionality to parse standard argc/argv in an easy mannor.
+
+	Example:
+		Example from xbexec.exe
+
+		(start code)
+		const char* input_file   = "";
+		const char* output_file  = "";
+		int verbose              = 0;
+
+		static const getopt_option_t option_list[] = 
+		{
+			{ "help",    'h', GETOPT_OPTION_TYPE_NO_ARG,        0x0, 'h', "displays this help-message" },
+			{ "input",   'i', GETOPT_OPTION_TYPE_REQUIRED,      0x0, 'i', "input-file" },
+			{ "output",  'o', GETOPT_OPTION_TYPE_REQUIRED,      0x0, 'o', "output-file" },
+			{ "verbose", 'v', GETOPT_OPTION_TYPE_FLAG_SET, &verbose,   1, "verbose output" },
+			{ 0 } // end option_list
+		};
+
+		getopt_context_t go_ctx;
+		getopt_create_context( &go_ctx, argc, argv, option_list );
+
+		int32 opt;
+		while((opt = GetOpt(&go_ctx)) != -1)
+		{
+			switch(opt)
+			{
+				case 'h': 
+				{
+					// print help
+					char buffer[2048];
+					printf("help:\n%s\n", getopt_create_help_string( &go_ctx, buffer, 2048 ) );
+					return 0;
+				}
+				case 'i': input_file  = go_ctx.current_opt_arg; break;
+				case 'o': output_file = go_ctx.current_opt_arg; break;
+				case '!': printf("error: incorrect usage of flag \"%s\"!\n\n", go_ctx.current_opt_arg); break;
+				case '?': printf("error: unrecognized flag \"%s\"!\n\n", go_ctx.current_opt_arg); break;
+				case '+': printf("got arg without - or -- \"%s\"\n", go_ctx.current_opt_arg ); break;
+				default:
+					ASSERT(false && "This should not happen!");
+			}
+		}
+		(end)
+*/
+
+/*
+	Enum: getopt_option_type_t
+		Types of supported options by system.
+
+		GETOPT_OPTION_TYPE_NO_ARG   - The option can have no argument
+		GETOPT_OPTION_TYPE_REQUIRED - The option requires an argument (--option=arg, -o arg)
+		GETOPT_OPTION_TYPE_OPTIONAL - The option-argument is optional
+
+		GETOPT_OPTION_TYPE_FLAG_SET - The option is a flag and value will be set to flag
+		GETOPT_OPTION_TYPE_FLAG_AND - The option is a flag and value will be and:ed with flag
+		GETOPT_OPTION_TYPE_FLAG_OR  - The option is a flag and value will be or:ed with flag
+*/
+typedef enum getopt_option_type
+{
+	GETOPT_OPTION_TYPE_NO_ARG,
+	GETOPT_OPTION_TYPE_REQUIRED,
+	GETOPT_OPTION_TYPE_OPTIONAL,
+	GETOPT_OPTION_TYPE_FLAG_SET,
+	GETOPT_OPTION_TYPE_FLAG_AND,
+	GETOPT_OPTION_TYPE_FLAG_OR
+} getopt_option_type_t;
+
+/*
+	Struct: getopt_option
+		Option in system.
+
+	Members:
+		name       - Long name of argument, set to NULL if only short name is valid.
+		name_short - Short name of argument, set to 0 if only long name is valid.
+		type       - Type of option, see <EOptionType>.
+		flag       - Ptr to flag to set if option is of flag-type, set to null NULL if option is not of flag-type.
+		value      - If option is of flag-type, this value will be set/and:ed/or:ed to the flag, else it will be returnde from GetOpt when option is found.
+		desc       - Description of option.
+		value_desc - Short description of valid values to the option, will only be used when generating help-text. example: "--my_option=<value_desc_goes_here>"
+*/
+typedef struct getopt_option
+{
+	const char*          name;
+	int                  name_short;
+	getopt_option_type_t type;
+	int*                 flag;
+	int                  value;
+	const char*          desc;
+	const char*          value_desc;
+} getopt_option_t;
+
+/*
+	Struct: getopt_context_t
+		Context used while parsing options.
+		Need to be initialized by <getopt_create_context> before usage. If reused a reinitialization by <getopt_create_context> is needed.
+		Do not modify data in this struct manually!
+
+	Members:
+		argc            - Internal variable
+		argv            - Internal variable
+		opts            - Internal variable
+		num_opts        - Internal variable
+		current_index   - Internal variable
+		current_opt_arg - Used to return values. See <getopt_next>
+*/
+typedef struct getopt_context
+{
+	int                    argc;
+	const char**           argv;
+	const getopt_option_t* opts;
+	int                    num_opts;
+	int                    current_index;
+	const char*            current_opt_arg;
+} getopt_context_t;
+
+/*
+	Function: getopt_create_context
+		Initializes an getopt_context_t-struct to be used by <getopt_next>
+
+	Arguments:
+		ctx  - Ptr to context to initialize.
+		argc - argc from "int main(int argc, char** argv)" or equal.
+		argv - argv from "int main(int argc, char** argv)" or equal. Data need to be valid during option-parsing and usage of data.
+		opts - Ptr to array with options that should be looked for. Should end with an option that is all zeroed!
+
+	Returns:
+		0 on success, otherwise error-code.
+*/
+int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, const getopt_option_t* opts );
+
+/*
+	Function: getopt_next
+		Used to parse argc/argv with the help of a getopt_context_t.
+		Tries to parse the next token in ctx and return id depending on status.
+
+	Arguments:
+		ctx - Pointer to a initialized <getopt_context_t>
+
+	Returns:
+		- '!' on error. ctx->current_opt_arg will be set to flag-name! Errors that can occur, 
+		      Argument missing if argument is required or Argument found when there should be none.
+		- '?' if item was an unreqognized option, ctx->current_opt_arg will be set to item!
+		- '+' if item was no option, ctx->current_opt_arg will be set to item!
+		- '0' if the opt was a flag and it was set. ctx->current_opt_arg will be set to flag-name!
+		      the value stored is value in the found option.
+		- -1 no more options to parse!
+*/
+int getopt_next( getopt_context_t* ctx );
+
+/*
+	Function: GetOptCreateHelpString
+		Builds a string that describes all options for use with the --help-flag etc.
+
+	Arguments:
+		ctx         - Pointer to a initialized <getopt_context_t>
+		buffer      - Pointer to buffer to build string in.
+		buffer_size - Size of buffer.
+
+	Returns:
+		buffer filled with a help-string.
+*/
+const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, unsigned int buffer_size );
+
+#if defined (__cplusplus)
+}
+#endif
+
+#endif

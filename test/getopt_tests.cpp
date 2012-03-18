@@ -41,11 +41,8 @@ static const getopt_option_t option_list[] =
 	{ 0 } // end option_list
 };
 
-TEST( getopt, short_opt )
+void test_get_opt_simple( int argc, const char** argv )
 {
-	const char* argv[] = { "dummy_prog", "-a", "-b" };
-	int argc           = ARRAY_LENGTH( argv );
-
 	bool got_a = false;
 	bool got_b = false;
 
@@ -67,36 +64,15 @@ TEST( getopt, short_opt )
 	}
 
 	EXPECT_TRUE( got_a );
-	EXPECT_TRUE( got_b );
+	EXPECT_TRUE( got_b );	
 }
 
-TEST( getopt, long_opt )
+TEST( getopt, short_opt )
 {
-	const char* argv[] = { "dummy_prog", "--aaaa", "--bbbb" };
-	int argc           = ARRAY_LENGTH( argv );
-
-	bool got_a = false;
-	bool got_b = false;
-
-	getopt_context_t ctx;
-	int err = getopt_create_context( &ctx, argc, argv, option_list );
-	EXPECT_EQ( 0, err );
-
-	int opt;
-	while( ( opt = getopt_next( &ctx ) ) != -1 )
-	{
-		switch( opt )
-		{
-			case 'a': EXPECT_FALSE( got_a ); got_a = true; break;
-			case 'b': EXPECT_FALSE( got_b ); got_b = true; break;
-			default:
-				EXPECT_TRUE( false ) << "got opt '" << (char)opt << "'";
-				break;
-		}
-	}
-
-	EXPECT_TRUE( got_a );
-	EXPECT_TRUE( got_b );
+	const char* argv1[] = { "dummy_prog", "-a", "-b" };
+	const char* argv2[] = { "dummy_prog", "--aaaa", "--bbbb" };
+	test_get_opt_simple( ARRAY_LENGTH( argv1 ), argv1 );
+	test_get_opt_simple( ARRAY_LENGTH( argv2 ), argv2 );
 }
 
 TEST( getopt, unknown_flags )

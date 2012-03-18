@@ -31,14 +31,14 @@ int g_flag = 0xFFFFFFFF;
 
 static const getopt_option_t option_list[] = 
 {
-	{ "aaaa", 'a', GETOPT_OPTION_TYPE_NO_ARG,   0x0,      'a', "help a" },
-	{ "bbbb", 'b', GETOPT_OPTION_TYPE_NO_ARG,   0x0,      'b', "help b" },
-	{ "cccc", 'c', GETOPT_OPTION_TYPE_REQUIRED, 0x0,      'c', "help c" },
-	{ "dddd", 'd', GETOPT_OPTION_TYPE_OPTIONAL, 0x0,      'd', "help d" },
-	{ "eeee", 'e', GETOPT_OPTION_TYPE_FLAG_SET, &g_flag, 1337, "help e" },
-	{ "ffff", 'f', GETOPT_OPTION_TYPE_FLAG_AND, &g_flag,    1, "help f" },
-	{ "gggg", 'g', GETOPT_OPTION_TYPE_FLAG_OR , &g_flag,    1, "help g" },
-	{ 0 } // end option_list
+	{ "aaaa", 'a', GETOPT_OPTION_TYPE_NO_ARG,   0x0,      'a', "help a", 0 },
+	{ "bbbb", 'b', GETOPT_OPTION_TYPE_NO_ARG,   0x0,      'b', "help b", 0 },
+	{ "cccc", 'c', GETOPT_OPTION_TYPE_REQUIRED, 0x0,      'c', "help c", 0 },
+	{ "dddd", 'd', GETOPT_OPTION_TYPE_OPTIONAL, 0x0,      'd', "help d", 0 },
+	{ "eeee", 'e', GETOPT_OPTION_TYPE_FLAG_SET, &g_flag, 1337, "help e", 0 },
+	{ "ffff", 'f', GETOPT_OPTION_TYPE_FLAG_AND, &g_flag,    1, "help f", 0 },
+	{ "gggg", 'g', GETOPT_OPTION_TYPE_FLAG_OR , &g_flag,    1, "help g", 0 },
+	GETOPT_OPTIONS_END
 };
 
 void test_get_opt_simple( int argc, const char** argv )

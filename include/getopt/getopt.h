@@ -48,7 +48,7 @@ extern "C" {
 			{ "input",   'i', GETOPT_OPTION_TYPE_REQUIRED,      0x0, 'i', "input-file" },
 			{ "output",  'o', GETOPT_OPTION_TYPE_REQUIRED,      0x0, 'o', "output-file" },
 			{ "verbose", 'v', GETOPT_OPTION_TYPE_FLAG_SET, &verbose,   1, "verbose output" },
-			{ 0 } // end option_list
+			GETOPT_OPTIONS_END
 		};
 
 		getopt_context_t go_ctx;
@@ -99,6 +99,12 @@ typedef enum getopt_option_type
 	GETOPT_OPTION_TYPE_FLAG_AND,
 	GETOPT_OPTION_TYPE_FLAG_OR
 } getopt_option_type_t;
+
+/**
+ * Helper-macro to define end-element in options-array.
+ * Mostly helpfull on higher warning-level where compiler would complain for { 0 }
+ */
+#define GETOPT_OPTIONS_END { 0, 0, GETOPT_OPTION_TYPE_NO_ARG, 0, 0, 0, 0 }
 
 /*
 	Struct: getopt_option

@@ -31,7 +31,7 @@ config   = "debug"
 local settings = NewSettings() -- {}
 
 settings.cc.includes:Add("include")
-settings.cc.flags:Add( "-Wall", "-Werror", "-Wstrict-aliasing=2" )
+settings.cc.flags:Add( "-Wextra", "-Wall", "-Werror", "-Wstrict-aliasing=2" )
 
 local output_path = PathJoin( BUILD_PATH, PathJoin( platform, config ) )
 local output_func = function(settings, path) return PathJoin(output_path, PathFilename(PathBase(path)) .. settings.config_ext) end

@@ -70,7 +70,8 @@ int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, c
 
 	/* count opts */
 	ctx->num_opts = 0;
-	getopt_option_t cmp_opt = { 0 };
+	getopt_option_t cmp_opt;
+	memset( &cmp_opt, 0x0, sizeof(getopt_option_t) );
 	const getopt_option_t* opt = opts;
 	while( memcmp( opt, &cmp_opt, sizeof(getopt_option_t) ) != 0 )
 	{

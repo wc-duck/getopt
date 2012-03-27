@@ -48,7 +48,7 @@ static int str_case_cmp_len(const char* s1, const char* s2, unsigned int len)
 #endif /* defined (_MSC_VER) */
 }
 
-static int str_format(char* buf, unsigned int buf_size, const char* fmt, ...)
+static int str_format(char* buf, size_t buf_size, const char* fmt, ...)
 {
 	va_list args;
 	va_start( args, fmt );
@@ -244,24 +244,33 @@ int getopt_next( getopt_context_t* ctx )
  	return -1;
 }
 
-const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, unsigned int buffer_size )
+const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, size_t buffer_size )
 {
-	int buffer_pos = 0;
-	int opt_index  = 0;
+	size_t buffer_pos = 0;
+	int    opt_index  = 0;
 	for( ; opt_index < ctx->num_opts; ++opt_index )
 	{
 		const getopt_option_t* opt = ctx->opts + opt_index;
 
 		char long_name[64];
-		int outpos = str_format( long_name, 64, "--%s", opt->name );
+		int chars_written = str_format( long_name, 64, "--%s", opt->name );
+		if( chars_written < 0 )
+			return buffer;
+
+		size_t outpos = (size_t)chars_written;
 
 		if( opt->type == GETOPT_OPTION_TYPE_REQUIRED )
 			str_format(long_name + outpos, 64 - outpos, "=<%s>", opt->value_desc);
 
 		if(opt->name_short == 0x0)
-			buffer_pos += str_format( buffer + buffer_pos, buffer_size - buffer_pos, "   %-32s - %s\n", long_name, opt->desc );
+			chars_written = str_format( buffer + buffer_pos, buffer_size - buffer_pos, "   %-32s - %s\n", long_name, opt->desc );
 		else
-			buffer_pos += str_format( buffer + buffer_pos, buffer_size - buffer_pos, "-%c %-32s - %s\n", opt->name_short, long_name, opt->desc);
+			chars_written = str_format( buffer + buffer_pos, buffer_size - buffer_pos, "-%c %-32s - %s\n", opt->name_short, long_name, opt->desc);
+
+		if( chars_written < 0 )
+			return buffer;
+		
+		buffer_pos += (size_t)chars_written;
 	}
 
 	return buffer;

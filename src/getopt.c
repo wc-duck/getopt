@@ -30,7 +30,7 @@
 #if !defined(_MSC_VER)
 #   include <strings.h> /* for strncasecmp */
 #else
-#	include <ctypes.h> /* tolower */
+#	include <ctype.h> /* tolower */
 #endif
 
 static int str_case_cmp_len(const char* s1, const char* s2, unsigned int len)

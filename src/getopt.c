@@ -261,8 +261,17 @@ const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, size
 
 		size_t outpos = (size_t)chars_written;
 
-		if( opt->type == GETOPT_OPTION_TYPE_REQUIRED )
-			str_format(long_name + outpos, 64 - outpos, "=<%s>", opt->value_desc);
+		switch( opt->type )
+		{
+			case GETOPT_OPTION_TYPE_REQUIRED:
+				str_format(long_name + outpos, 64 - outpos, "=<%s>", opt->value_desc);
+				break;
+			case GETOPT_OPTION_TYPE_OPTIONAL:
+				str_format(long_name + outpos, 64 - outpos, "(=%s)", opt->value_desc);
+				break;
+			default:
+				break;
+		}
 
 		if(opt->name_short == 0x0)
 			chars_written = str_format( buffer + buffer_pos, buffer_size - buffer_pos, "   %-32s - %s\n", long_name, opt->desc );

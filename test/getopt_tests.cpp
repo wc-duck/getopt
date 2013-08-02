@@ -22,7 +22,7 @@
    Fredrik Kihlander
 */
 
-#include <gtest/gtest.h>
+#include "greatest.h"
 #include <getopt/getopt.h>
 
 #define ARRAY_LENGTH( arr ) ( sizeof( arr ) / sizeof( arr[0] ) )
@@ -41,41 +41,45 @@ static const getopt_option_t option_list[] =
 	GETOPT_OPTIONS_END
 };
 
-void test_get_opt_simple( int argc, const char** argv )
+int test_get_opt_simple( int argc, const char** argv )
 {
 	bool got_a = false;
 	bool got_b = false;
 
 	getopt_context_t ctx;
 	int err = getopt_create_context( &ctx, argc, argv, option_list );
-	EXPECT_EQ( 0, err );
+	ASSERT_EQ( 0, err );
 
 	int opt;
 	while( ( opt = getopt_next( &ctx ) ) != -1 )
 	{
 		switch( opt )
 		{
-			case 'a': EXPECT_FALSE( got_a ); got_a = true; break;
-			case 'b': EXPECT_FALSE( got_b ); got_b = true; break;
+			case 'a': ASSERT( !got_a ); got_a = true; break; // TODO: TRY!!!, should be false
+			case 'b': ASSERT( !got_b ); got_b = true; break;
 			default:
-				EXPECT_TRUE( false ) << "got opt '" << (char)opt << "'";
+				FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}
 
-	EXPECT_TRUE( got_a );
-	EXPECT_TRUE( got_b );	
+	ASSERT( got_a );
+	ASSERT( got_b );
+	return 0;
 }
 
-TEST( getopt, short_opt )
+TEST short_opt()
 {
 	const char* argv1[] = { "dummy_prog", "-a", "-b" };
 	const char* argv2[] = { "dummy_prog", "--aaaa", "--bbbb" };
-	test_get_opt_simple( ARRAY_LENGTH( argv1 ), argv1 );
-	test_get_opt_simple( ARRAY_LENGTH( argv2 ), argv2 );
+	if( test_get_opt_simple( ARRAY_LENGTH( argv1 ), argv1 ) != 0 )
+		return -1;
+	if( test_get_opt_simple( ARRAY_LENGTH( argv2 ), argv2 ) != 0 )
+		return -1;
+	return 0;
 }
 
-TEST( getopt, unknown_flags )
+TEST unknown_flags()
 {
 	const char* argv[] = { "dummy_prog", "-p", "--pppp", "--ccccc" };
 	int argc           = ARRAY_LENGTH( argv );
@@ -85,7 +89,7 @@ TEST( getopt, unknown_flags )
 
 	getopt_context_t ctx;
 	int err = getopt_create_context( &ctx, argc, argv, option_list );
-	EXPECT_EQ( 0, err );
+	ASSERT_EQ( 0, err );
 
 	int opt;
 	while( ( opt = getopt_next( &ctx ) ) != -1 )
@@ -94,25 +98,27 @@ TEST( getopt, unknown_flags )
 		{
 			case '?':  unknown_flags[unknow_count++] = ctx.current_opt_arg; break;
 			default:
-				EXPECT_TRUE( false ) << "got opt '" << (char)opt << "'";
+				FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}
 
-	EXPECT_EQ(3, unknow_count);
-	EXPECT_STREQ("-p", unknown_flags[0]);
-	EXPECT_STREQ("--pppp", unknown_flags[1]);
-	EXPECT_STREQ("--ccccc", unknown_flags[2]);
+	ASSERT_EQ(3, unknow_count);
+	ASSERT_STR_EQ("-p", unknown_flags[0]);
+	ASSERT_STR_EQ("--pppp", unknown_flags[1]);
+	ASSERT_STR_EQ("--ccccc", unknown_flags[2]);
+
+	return 0;
 }
 
-void test_with_arg( int argc, const char** argv )
+int test_with_arg( int argc, const char** argv )
 {
 	int value_count = 0;
 	const char* values[2] = { 0x0, 0x0 };
 
 	getopt_context_t ctx;
 	int err = getopt_create_context( &ctx, argc, argv, option_list );
-	EXPECT_EQ( 0, err );
+	ASSERT_EQ( 0, err );
 
 	int opt;
 	while( ( opt = getopt_next( &ctx ) ) != -1 )
@@ -121,71 +127,78 @@ void test_with_arg( int argc, const char** argv )
 		{
 			case 'c':  values[value_count++] = ctx.current_opt_arg; break;
 			default:
-				EXPECT_TRUE( false ) << "got opt '" << (char)opt << "'";
+				FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}
 
-	EXPECT_EQ( 2, value_count );
-	EXPECT_STREQ( "c_value_1", values[0] );
-	EXPECT_STREQ( "c_value_2", values[1] );	
+	ASSERT_EQ( 2, value_count );
+	ASSERT_STR_EQ( "c_value_1", values[0] );
+	ASSERT_STR_EQ( "c_value_2", values[1] );
+	return 0;
 }
 
-void test_missing_arg( int argc, const char** argv )
+int test_missing_arg( int argc, const char** argv )
 {
 	getopt_context_t ctx;
 	int err = getopt_create_context( &ctx, argc, argv, option_list );
-	EXPECT_EQ( 0, err );
+	ASSERT_EQ( 0, err );
 
 	int opt;
 	while( ( opt = getopt_next( &ctx ) ) != -1 )
 	{
 		switch( opt )
 		{
-			case 'c': EXPECT_TRUE( false ); break; // we should not get a call to c since it requires an argument
+			case 'c': FAILm( "we should not get a call to c since it requires an argument" ); break;
 			case 'b': break;
-			case '!': EXPECT_STREQ("cccc", ctx.current_opt_arg ); break; // flag should be stored in current_opt_arg
+			case '!': ASSERT_STR_EQ("cccc", ctx.current_opt_arg ); break; // flag should be stored in current_opt_arg
 			default:
-				EXPECT_TRUE( false ) << "got opt '" << (char)opt << "'";
+				FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}
+
+	return 0;
 }
 
-TEST( getopt, with_args_short )
+TEST with_args_short()
 {
-	const char* argv[] = { "dummy_prog", "-c", "c_value_1", "-c", "c_value_2" }; 
-	test_with_arg( ARRAY_LENGTH( argv ), argv );
+	const char* argv[] = { "dummy_prog", "-c", "c_value_1", "-c", "c_value_2" };
+	return test_with_arg( ARRAY_LENGTH( argv ), argv );
 }
 
-TEST( getopt, with_args_long )
+TEST with_args_long()
 {
 	const char* argv1[] = { "dummy_prog", "--cccc=c_value_1",         "--cccc=", "c_value_2" };
 	const char* argv2[] = { "dummy_prog", "--cccc", "=c_value_1",     "--cccc", "=", "c_value_2" };
-	test_with_arg( ARRAY_LENGTH( argv1 ), argv1 );
-	test_with_arg( ARRAY_LENGTH( argv2 ), argv2 );
+	if( test_with_arg( ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
+	if( test_with_arg( ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	return 0;
 }
 
-TEST( getopt, with_args_short_after_long )
+TEST with_args_short_after_long()
 {
 	const char* argv1[] = { "dummy_prog", "--cccc=c_value_1",         "-c", "c_value_2" };
 	const char* argv2[] = { "dummy_prog", "--cccc", "=c_value_1",     "-c", "c_value_2" };
 	const char* argv3[] = { "dummy_prog", "--cccc", "=", "c_value_1", "-c", "c_value_2" };
 
-	test_with_arg( ARRAY_LENGTH( argv1 ), argv1 );
-	test_with_arg( ARRAY_LENGTH( argv2 ), argv2 );
-	test_with_arg( ARRAY_LENGTH( argv3 ), argv3 );
+	if( test_with_arg( ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
+	if( test_with_arg( ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	if( test_with_arg( ARRAY_LENGTH( argv3 ), argv3 ) != 0 ) return -1;
+
+	return 0;
 }
 
-TEST( getopt, missing_arg_short )
+TEST missing_arg_short()
 {
-	const char* argv1[] = { "dummy_prog", "-c",     "-b" }; 
+	const char* argv1[] = { "dummy_prog", "-c",     "-b" };
 	const char* argv2[] = { "dummy_prog", "--cccc", "-b" };
-	test_missing_arg( ARRAY_LENGTH( argv1 ), argv1 );
-	test_missing_arg( ARRAY_LENGTH( argv2 ), argv2 );
+	if( test_missing_arg( ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
+	if( test_missing_arg( ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	return 0;
 }
 
-void test_optional_arg( int argc, const char** argv )
+int test_optional_arg( int argc, const char** argv )
 {
 	const char* arguments[2] = { "put_arg1_here", "put_arg2_here" };
 	int d_count = 0;
@@ -193,7 +206,7 @@ void test_optional_arg( int argc, const char** argv )
 
 	getopt_context_t ctx;
 	int err = getopt_create_context( &ctx, argc, argv, option_list );
-	EXPECT_EQ( 0, err );
+	ASSERT_EQ( 0, err );
 
 	int opt;
 	while( ( opt = getopt_next( &ctx ) ) != -1 )
@@ -203,26 +216,29 @@ void test_optional_arg( int argc, const char** argv )
 			case 'd': arguments[d_count++] = ctx.current_opt_arg; break;
 			case 'b': ++b_count; break;
 			default:
-				EXPECT_TRUE( false ) << "got opt '" << (char)opt << "' " << "value '" << ctx.current_opt_arg << "'";
+				FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}
 
-	EXPECT_EQ(2, d_count);
-	EXPECT_EQ(2, b_count);
-	EXPECT_EQ((const char*)0x0, arguments[0] );
-	EXPECT_STREQ("arg", arguments[1] );
+	ASSERT_EQ(2, d_count);
+	ASSERT_EQ(2, b_count);
+	ASSERT_EQ((const char*)0x0, arguments[0] );
+	ASSERT_STR_EQ("arg", arguments[1] );
+
+	return 0;
 }
 
-TEST( getopt, optional_arg )
+TEST optional_arg()
 {
 	const char* argv1[] = { "dummy_prog", "-d", "-b", "-d", "arg", "-b" };
 	const char* argv2[] = { "dummy_prog", "--dddd", "-b", "--dddd=", "arg", "-b" };
-	test_optional_arg( ARRAY_LENGTH( argv1 ), argv1 );
-	test_optional_arg( ARRAY_LENGTH( argv2 ), argv2 );
+	if( test_optional_arg( ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
+	if( test_optional_arg( ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	return 0;
 }
 
-TEST( getopt, non_arguments )
+TEST non_arguments()
 {
 	const char* argv[] = { "dummy_prog", "-c", "arg1", "non_arg1", "--cccc=arg2", "non_arg2", "non_arg3" };
 	int argc = ARRAY_LENGTH( argv );
@@ -234,7 +250,7 @@ TEST( getopt, non_arguments )
 
 	getopt_context_t ctx;
 	int err = getopt_create_context( &ctx, argc, argv, option_list );
-	EXPECT_EQ( 0, err );
+	ASSERT_EQ( 0, err );
 
 	int opt;
 	while( ( opt = getopt_next( &ctx ) ) != -1 )
@@ -244,21 +260,23 @@ TEST( getopt, non_arguments )
 			case 'c': args[args_count++]         = ctx.current_opt_arg; break;
 			case '+': non_args[non_args_count++] = ctx.current_opt_arg; break;
 			default:
-				EXPECT_TRUE( false ) << "got opt '" << (char)opt << "' " << "value '" << ctx.current_opt_arg << "'";
+				FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}
 
-	EXPECT_EQ(2, args_count);
-	EXPECT_EQ(3, non_args_count);
-	EXPECT_STREQ("arg1", args[0]);
-	EXPECT_STREQ("arg2", args[1]);
-	EXPECT_STREQ("non_arg1", non_args[0]);
-	EXPECT_STREQ("non_arg2", non_args[1]);
-	EXPECT_STREQ("non_arg3", non_args[2]);
+	ASSERT_EQ(2, args_count);
+	ASSERT_EQ(3, non_args_count);
+	ASSERT_STR_EQ("arg1", args[0]);
+	ASSERT_STR_EQ("arg2", args[1]);
+	ASSERT_STR_EQ("non_arg1", non_args[0]);
+	ASSERT_STR_EQ("non_arg2", non_args[1]);
+	ASSERT_STR_EQ("non_arg3", non_args[2]);
+
+	return 0;
 }
 
-TEST( getopt, set_flag )
+TEST set_flag()
 {
 	g_flag = 0xFFFFFFFF;
 
@@ -270,7 +288,7 @@ TEST( getopt, set_flag )
 
 	getopt_context_t ctx;
 	int err = getopt_create_context( &ctx, argc, argv, option_list );
-	EXPECT_EQ( 0, err );
+	ASSERT_EQ( 0, err );
 
 	int opt;
 	while( ( opt = getopt_next( &ctx ) ) != -1 )
@@ -279,26 +297,44 @@ TEST( getopt, set_flag )
 		{
 			case '\0': flag_values[num_flags++] = g_flag; break;
 			default:
-				EXPECT_TRUE( false ) << "got opt '" << (char)opt << "' " << "value '" << ctx.current_opt_arg << "'";
+				FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}
 
-	EXPECT_EQ(5, num_flags);
+	ASSERT_EQ(5, num_flags);
 	int expect0 = 0xFFFFFFFF;
 	int expect1 = expect0 | 1;
 	int expect2 = expect1 & 1;
 	int expect3 = expect2 | 1;
 	int expect4 = expect3 & 1;
-	EXPECT_EQ(expect1, flag_values[0] );
-	EXPECT_EQ(expect2, flag_values[1] );
-	EXPECT_EQ(expect3, flag_values[2] );
-	EXPECT_EQ(expect4, flag_values[3] );
-	EXPECT_EQ(1337,    flag_values[4] );
+	ASSERT_EQ(expect1, flag_values[0] );
+	ASSERT_EQ(expect2, flag_values[1] );
+	ASSERT_EQ(expect3, flag_values[2] );
+	ASSERT_EQ(expect4, flag_values[3] );
+	ASSERT_EQ(1337,    flag_values[4] );
+	return 0;
 }
 
-int main( int argc, char** argv )
+GREATEST_SUITE( getopt )
 {
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+	RUN_TEST( short_opt );
+	RUN_TEST( unknown_flags );
+	RUN_TEST( with_args_short );
+	RUN_TEST( with_args_long );
+	RUN_TEST( with_args_short_after_long );
+	RUN_TEST( missing_arg_short );
+	RUN_TEST( optional_arg );
+	RUN_TEST( non_arguments );
+	RUN_TEST( set_flag );
 }
+
+GREATEST_MAIN_DEFS();
+
+int main( int argc, char **argv )
+{
+    GREATEST_MAIN_BEGIN();
+    RUN_SUITE( getopt );
+    GREATEST_MAIN_END();
+}
+

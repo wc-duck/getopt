@@ -44,6 +44,5 @@ local lib   = StaticLibrary( settings, 'getopt', objs )
 
 local example = Link( settings, 'example', Compile( settings, 'example/example.cpp' ), lib )
 
-settings.link.libs:Add( 'gtest', 'pthread' )
 local test_objs  = Compile( settings, 'test/getopt_tests.cpp' )
 local tests      = Link( settings, 'getopt_tests', test_objs, lib )

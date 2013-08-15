@@ -25,13 +25,18 @@
 
 BUILD_PATH = "local"
 
-platform = "linux_x86_64"
 config   = "debug"
 
 local settings = NewSettings() -- {}
 
 settings.cc.includes:Add("include")
-settings.cc.flags:Add( "-Wconversion", "-Wextra", "-Wall", "-Werror", "-Wstrict-aliasing=2" )
+if family == 'windows' then
+	platform = "winx64"
+	settings.cc.flags:Add( "/TP" ) -- forcing c++ compile on windows =/
+else
+	platform = "linux_x86_64"
+	settings.cc.flags:Add( "-Wconversion", "-Wextra", "-Wall", "-Werror", "-Wstrict-aliasing=2" )
+end
 
 local output_path = PathJoin( BUILD_PATH, PathJoin( platform, config ) )
 local output_func = function(settings, path) return PathJoin(output_path, PathFilename(PathBase(path)) .. settings.config_ext) end

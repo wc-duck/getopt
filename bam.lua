@@ -25,8 +25,6 @@
 
 BUILD_PATH = "local"
 
-BUILD_PATH = "local"
-
 function get_config()
     local config = ScriptArgs["config"]
     if config == nil then

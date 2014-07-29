@@ -27,7 +27,7 @@
 
 #define ARRAY_LENGTH( arr ) ( sizeof( arr ) / sizeof( arr[0] ) )
 
-int g_flag = 0xFFFFFFFF;
+int g_flag = -1;
 
 static const getopt_option_t option_list[] = 
 {
@@ -72,9 +72,9 @@ TEST short_opt()
 {
 	const char* argv1[] = { "dummy_prog", "-a", "-b" };
 	const char* argv2[] = { "dummy_prog", "--aaaa", "--bbbb" };
-	if( test_get_opt_simple( ARRAY_LENGTH( argv1 ), argv1 ) != 0 )
+	if( test_get_opt_simple( (int)ARRAY_LENGTH( argv1 ), argv1 ) != 0 )
 		return -1;
-	if( test_get_opt_simple( ARRAY_LENGTH( argv2 ), argv2 ) != 0 )
+	if( test_get_opt_simple( (int)ARRAY_LENGTH( argv2 ), argv2 ) != 0 )
 		return -1;
 	return 0;
 }
@@ -82,7 +82,7 @@ TEST short_opt()
 TEST unknown_flags()
 {
 	const char* argv[] = { "dummy_prog", "-p", "--pppp", "--ccccc" };
-	int argc           = ARRAY_LENGTH( argv );
+	int argc           = (int)ARRAY_LENGTH( argv );
 
 	int unknow_count = 0;
 	const char* unknown_flags[3] = { 0x0 };
@@ -164,15 +164,15 @@ int test_missing_arg( int argc, const char** argv )
 TEST with_args_short()
 {
 	const char* argv[] = { "dummy_prog", "-c", "c_value_1", "-c", "c_value_2" };
-	return test_with_arg( ARRAY_LENGTH( argv ), argv );
+	return test_with_arg( (int)ARRAY_LENGTH( argv ), argv );
 }
 
 TEST with_args_long()
 {
 	const char* argv1[] = { "dummy_prog", "--cccc=c_value_1",         "--cccc=", "c_value_2" };
 	const char* argv2[] = { "dummy_prog", "--cccc", "=c_value_1",     "--cccc", "=", "c_value_2" };
-	if( test_with_arg( ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
-	if( test_with_arg( ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	if( test_with_arg( (int)ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
+	if( test_with_arg( (int)ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
 	return 0;
 }
 
@@ -182,9 +182,9 @@ TEST with_args_short_after_long()
 	const char* argv2[] = { "dummy_prog", "--cccc", "=c_value_1",     "-c", "c_value_2" };
 	const char* argv3[] = { "dummy_prog", "--cccc", "=", "c_value_1", "-c", "c_value_2" };
 
-	if( test_with_arg( ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
-	if( test_with_arg( ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
-	if( test_with_arg( ARRAY_LENGTH( argv3 ), argv3 ) != 0 ) return -1;
+	if( test_with_arg( (int)ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
+	if( test_with_arg( (int)ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	if( test_with_arg( (int)ARRAY_LENGTH( argv3 ), argv3 ) != 0 ) return -1;
 
 	return 0;
 }
@@ -193,8 +193,8 @@ TEST missing_arg_short()
 {
 	const char* argv1[] = { "dummy_prog", "-c",     "-b" };
 	const char* argv2[] = { "dummy_prog", "--cccc", "-b" };
-	if( test_missing_arg( ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
-	if( test_missing_arg( ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	if( test_missing_arg( (int)ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
+	if( test_missing_arg( (int)ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
 	return 0;
 }
 
@@ -233,15 +233,15 @@ TEST optional_arg()
 {
 	const char* argv1[] = { "dummy_prog", "-d", "-b", "-d", "arg", "-b" };
 	const char* argv2[] = { "dummy_prog", "--dddd", "-b", "--dddd=", "arg", "-b" };
-	if( test_optional_arg( ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
-	if( test_optional_arg( ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	if( test_optional_arg( (int)ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
+	if( test_optional_arg( (int)ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
 	return 0;
 }
 
 TEST non_arguments()
 {
 	const char* argv[] = { "dummy_prog", "-c", "arg1", "non_arg1", "--cccc=arg2", "non_arg2", "non_arg3" };
-	int argc = ARRAY_LENGTH( argv );
+	int argc = (int)ARRAY_LENGTH( argv );
 
 	const char* args[2]      = { "fill1", "fill2" };
 	const char* non_args[3]  = { "fill3", "fill4", "fill5" };
@@ -278,10 +278,10 @@ TEST non_arguments()
 
 TEST set_flag()
 {
-	g_flag = 0xFFFFFFFF;
+	g_flag = -1;
 
 	const char* argv[] = { "dummy_prog", "-g", "-f", "-g", "-f", "-e" }; // ( ( ( 0xFFFFFFFF | 1 ) & 1 ) | 1 ) & 1
-	int argc = ARRAY_LENGTH( argv );
+	int argc = (int)ARRAY_LENGTH( argv );
 
 	int flag_values[5] = { 0 };
 	int num_flags = 0;
@@ -303,7 +303,7 @@ TEST set_flag()
 	}
 
 	ASSERT_EQ(5, num_flags);
-	int expect0 = 0xFFFFFFFF;
+	int expect0 = -1;
 	int expect1 = expect0 | 1;
 	int expect2 = expect1 & 1;
 	int expect3 = expect2 | 1;

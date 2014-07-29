@@ -1,5 +1,8 @@
 # getopt - command line options parser in c
 
+[![Build Status](https://travis-ci.org/wc-duck/getopt.svg?branch=master)](https://travis-ci.org/wc-duck/getopt)
+[![Build status](https://ci.appveyor.com/api/projects/status/4twbkbyhj7h7i689)](https://ci.appveyor.com/project/wc-duck/getopt)
+
 ## About:
 This module aims to be a simple drop-in argc/argv-parser for c/cpp-code. getopt support
 short ( -s ) and long ( --long ) options, flags and help-generation.

@@ -3,6 +3,8 @@
 
    Copyright (C) 2012- Fredrik Kihlander
 
+   https://github.com/wc-duck/getopt
+
    This software is provided 'as-is', without any express or implied
    warranty.  In no event will the authors be held liable for any damages
    arising from the use of this software.
@@ -171,6 +173,11 @@ int getopt_next( getopt_context_t* ctx )
 									found_arg = next_token + 1;
 								else if( ctx->current_index < ctx->argc )
 									found_arg = ctx->argv[ ctx->current_index++ ]; /* next token has been processed aswell! */
+							}
+							else if( next_token[0] != '-' )
+							{
+								ctx->current_index++; /* next token has been processed aswell! */
+								found_arg = next_token;
 							}
 						}
 					}

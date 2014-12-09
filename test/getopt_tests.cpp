@@ -3,6 +3,8 @@
 
    Copyright (C) 2012- Fredrik Kihlander
 
+   https://github.com/wc-duck/getopt
+
    This software is provided 'as-is', without any express or implied
    warranty.  In no event will the authors be held liable for any damages
    arising from the use of this software.
@@ -171,8 +173,10 @@ TEST with_args_long()
 {
 	const char* argv1[] = { "dummy_prog", "--cccc=c_value_1",         "--cccc=", "c_value_2" };
 	const char* argv2[] = { "dummy_prog", "--cccc", "=c_value_1",     "--cccc", "=", "c_value_2" };
+	const char* argv3[] = { "dummy_prog", "--cccc", "c_value_1",      "--cccc", "c_value_2" };
 	if( test_with_arg( (int)ARRAY_LENGTH( argv1 ), argv1 ) != 0 ) return -1;
 	if( test_with_arg( (int)ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
+	if( test_with_arg( (int)ARRAY_LENGTH( argv3 ), argv3 ) != 0 ) return -1;
 	return 0;
 }
 

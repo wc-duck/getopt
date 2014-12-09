@@ -12,7 +12,7 @@ install:
   - local\winx64\debug\getopt_tests.exe
   - local\winx64\release\getopt_tests.exe
 
-build: OFF
-test: OFF
-test_script: OFF
-deploy: OFF
+build: off
+test: off
+test_script: off
+deploy: off

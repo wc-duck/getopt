@@ -11,3 +11,6 @@ install:
   - bam\bam.exe config=release
   - local\winx64\debug\getopt_tests.exe
   - local\winx64\release\getopt_tests.exe
+
+build: off
+

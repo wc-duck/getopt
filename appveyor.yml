@@ -7,12 +7,11 @@ install:
   - cd bam
   - make_win64_msvc.bat
   - cd ..
+
+build:
   - bam\bam.exe config=debug
   - bam\bam.exe config=release
+
+test:
   - local\winx64\debug\getopt_tests.exe
   - local\winx64\release\getopt_tests.exe
-
-build: off
-test: off
-test_script: off
-deploy: off

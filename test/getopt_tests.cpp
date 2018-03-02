@@ -163,6 +163,30 @@ int test_missing_arg( int argc, const char** argv )
 	return 0;
 }
 
+int test_zero_args( int argc, const char** argv )
+{
+	getopt_context_t ctx;
+	int err = getopt_create_context( &ctx, argc, argv, option_list );
+	ASSERT_EQ( 0, err );
+
+	int opt;
+	if( ( opt = getopt_next( &ctx ) ) != -1 )
+	{
+		FAILm("No arguments should have been parsed since argc was 0!");
+	}
+
+	return 0;
+}
+
+TEST with_zero_args()
+{
+	if (test_zero_args( 0, NULL ) != 0 ) return -1;
+	if (test_zero_args( 1, NULL ) != 0 ) return -1;
+	return 0;
+}
+
+
+
 TEST with_args_short()
 {
 	const char* argv[] = { "dummy_prog", "-c", "c_value_1", "-c", "c_value_2" };
@@ -331,6 +355,7 @@ GREATEST_SUITE( getopt )
 	RUN_TEST( optional_arg );
 	RUN_TEST( non_arguments );
 	RUN_TEST( set_flag );
+	RUN_TEST( with_zero_args );
 }
 
 GREATEST_MAIN_DEFS();

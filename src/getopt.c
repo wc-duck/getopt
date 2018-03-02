@@ -66,8 +66,8 @@ static int str_format(char* buf, size_t buf_size, const char* fmt, ...)
 
 int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, const getopt_option_t* opts )
 {
-	ctx->argc            = argc - 1; /* stripping away file-name! */
-	ctx->argv            = argv + 1; /* stripping away file-name! */
+	ctx->argc            = (argc > 1) ? (argc - 1) : 0; /* stripping away file-name! */
+	ctx->argv            = (argc > 1) ? (argv + 1) : argv; /* stripping away file-name! */
 	ctx->opts            = opts;
 	ctx->current_index   = 0;
 	ctx->current_opt_arg = 0x0;

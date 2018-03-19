@@ -80,7 +80,6 @@ int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, c
 		if( opt->value == '!' || 
 			opt->value == '?' || 
 			opt->value == '+' || 
-			opt->value ==  0  || 
 			opt->value == -1)
 			return -1;
 

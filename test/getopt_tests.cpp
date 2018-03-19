@@ -40,6 +40,7 @@ static const getopt_option_t option_list[] =
 	{ "eeee", 'e', GETOPT_OPTION_TYPE_FLAG_SET, &g_flag, 1337, "help e", 0 },
 	{ "ffff", 'f', GETOPT_OPTION_TYPE_FLAG_AND, &g_flag,    1, "help f", 0 },
 	{ "gggg", 'g', GETOPT_OPTION_TYPE_FLAG_OR , &g_flag,    1, "help g", 0 },
+	{ "hhhh", 'h', GETOPT_OPTION_TYPE_NO_ARG,   0x0,        0, "help h", 0 },
 	GETOPT_OPTIONS_END
 };
 

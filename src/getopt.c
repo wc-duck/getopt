@@ -87,8 +87,6 @@ int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, c
 		ctx->num_opts++; opt++;
 	}
 
-	ctx->num_opts = (int)(opt - opts);
-
 	return 0;
 }
 

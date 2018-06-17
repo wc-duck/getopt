@@ -33,6 +33,19 @@
 extern "C" {
 #endif
 
+// Define GETOPT_PRIVATE_API before including getopt.h to inline all functions and self-include the source unit
+// #define GETOPT_PRIVATE_API
+// #include "getopt/getopt.h"
+#ifdef GETOPT_PRIVATE_API
+#  if defined(__GNUC__)
+#    define GETOPT_API static __attribute__((unused))
+#  else
+#	 define GETOPT_API static
+#  endif
+#else
+#	define GETOPT_API 
+#endif
+
 /*
 	File: getopt.h
 		Sumary:
@@ -128,7 +141,7 @@ typedef struct getopt_context
 	Returns:
 		0 on success, otherwise error-code.
 */
-int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, const getopt_option_t* opts );
+GETOPT_API int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, const getopt_option_t* opts );
 
 /*
 	Function: getopt_next
@@ -147,7 +160,7 @@ int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, c
 		      the value stored is value in the found option.
 		- -1 no more options to parse!
 */
-int getopt_next( getopt_context_t* ctx );
+GETOPT_API int getopt_next( getopt_context_t* ctx );
 
 /*
 	Function: GetOptCreateHelpString
@@ -161,7 +174,11 @@ int getopt_next( getopt_context_t* ctx );
 	Returns:
 		buffer filled with a help-string.
 */
-const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, size_t buffer_size );
+GETOPT_API const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, size_t buffer_size );
+
+#ifdef GETOPT_PRIVATE_API
+#	include "../../src/getopt.c"
+#endif
 
 #if defined (__cplusplus)
 }

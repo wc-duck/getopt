@@ -24,7 +24,9 @@
    Fredrik Kihlander
 */
 
-#include <getopt/getopt.h>
+#ifndef GETOPT_PRIVATE_API
+#	include <getopt/getopt.h>
+#endif
 
 #include <stdio.h>  /* for vsnprintf */
 #include <stdarg.h> /* for va_list */
@@ -35,7 +37,7 @@
 #   include <ctype.h> /* tolower */
 #endif
 
-static int str_case_cmp_len(const char* s1, const char* s2, unsigned int len)
+static int getopt__str_case_cmp_len(const char* s1, const char* s2, unsigned int len)
 {
 #if defined (_MSC_VER)
 	for(unsigned int i = 0; i < len; i++)
@@ -52,7 +54,7 @@ static int str_case_cmp_len(const char* s1, const char* s2, unsigned int len)
 #endif /* defined (_MSC_VER) */
 }
 
-static int str_format(char* buf, size_t buf_size, const char* fmt, ...)
+static int getopt__str_format(char* buf, size_t buf_size, const char* fmt, ...)
 {
 	va_list args;
 	va_start( args, fmt );
@@ -64,7 +66,7 @@ static int str_format(char* buf, size_t buf_size, const char* fmt, ...)
 	return ret;
 }
 
-int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, const getopt_option_t* opts )
+GETOPT_API int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, const getopt_option_t* opts )
 {
 	ctx->argc            = (argc > 1) ? (argc - 1) : 0; /* stripping away file-name! */
 	ctx->argv            = (argc > 1) ? (argv + 1) : argv; /* stripping away file-name! */
@@ -89,7 +91,7 @@ int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, c
 	return 0;
 }
 
-int getopt_next( getopt_context_t* ctx )
+GETOPT_API int getopt_next( getopt_context_t* ctx )
 {
 	/* are all options processed? */
 	if(ctx->current_index == ctx->argc )
@@ -148,7 +150,7 @@ int getopt_next( getopt_context_t* ctx )
 
 			unsigned int name_len = (unsigned int)strlen( opt->name );
 
-			if( str_case_cmp_len( opt->name, check_option, name_len ) == 0 )
+			if( getopt__str_case_cmp_len( opt->name, check_option, name_len ) == 0 )
 			{
 				check_option += name_len;
 
@@ -248,7 +250,7 @@ int getopt_next( getopt_context_t* ctx )
  	return -1;
 }
 
-const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, size_t buffer_size )
+GETOPT_API const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, size_t buffer_size )
 {
 	size_t buffer_pos = 0;
 	int    opt_index  = 0;
@@ -258,7 +260,7 @@ const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, size
 
 		size_t outpos;
 		char long_name[64];
-		int chars_written = str_format( long_name, 64, "--%s", opt->name );
+		int chars_written = getopt__str_format( long_name, 64, "--%s", opt->name );
 		if( chars_written < 0 )
 			return buffer;
 
@@ -267,19 +269,19 @@ const char* getopt_create_help_string( getopt_context_t* ctx, char* buffer, size
 		switch( opt->type )
 		{
 			case GETOPT_OPTION_TYPE_REQUIRED:
-				str_format(long_name + outpos, 64 - outpos, "=<%s>", opt->value_desc);
+				getopt__str_format(long_name + outpos, 64 - outpos, "=<%s>", opt->value_desc);
 				break;
 			case GETOPT_OPTION_TYPE_OPTIONAL:
-				str_format(long_name + outpos, 64 - outpos, "(=%s)", opt->value_desc);
+				getopt__str_format(long_name + outpos, 64 - outpos, "(=%s)", opt->value_desc);
 				break;
 			default:
 				break;
 		}
 
 		if(opt->name_short == 0x0)
-			chars_written = str_format( buffer + buffer_pos, buffer_size - buffer_pos, "   %-32s - %s\n", long_name, opt->desc );
+			chars_written = getopt__str_format( buffer + buffer_pos, buffer_size - buffer_pos, "   %-32s - %s\n", long_name, opt->desc );
 		else
-			chars_written = str_format( buffer + buffer_pos, buffer_size - buffer_pos, "-%c %-32s - %s\n", opt->name_short, long_name, opt->desc);
+			chars_written = getopt__str_format( buffer + buffer_pos, buffer_size - buffer_pos, "-%c %-32s - %s\n", opt->name_short, long_name, opt->desc);
 
 		if( chars_written < 0 )
 			return buffer;

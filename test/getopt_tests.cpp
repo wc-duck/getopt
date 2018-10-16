@@ -373,11 +373,8 @@ TEST same_prefix_long_opt()
 			case 'i': { found_input = 1; ASSERT_STR_EQ("Input Value", ctx.current_opt_arg); break; }
 			case 'I': { found_input_variant = 1; ASSERT_STR_EQ("Input Variant", ctx.current_opt_arg); break; }
 			default:
-				{
-					static char fail_msg[512];
-					snprintf(fail_msg, sizeof(fail_msg), "unexpected op '%c' '%s'", opt, ctx.argv[ctx.current_index]);
-					FAILm(fail_msg);
-				}
+
+			        FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}

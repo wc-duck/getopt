@@ -139,11 +139,11 @@ int getopt_next( getopt_context_t* ctx )
 	/* long opt */
 	else if(curr_token[1] == '-' && curr_token[2] != '\0')
 	{
-		const char* check_option = curr_token + 2;
-
 		int i = 0;
 		for( ; i < ctx->num_opts; i++ )
 		{
+			const char* check_option = curr_token + 2;
+
 			const getopt_option_t* opt = ctx->opts + i;
 
 			unsigned int name_len = (unsigned int)strlen( opt->name );

@@ -345,6 +345,49 @@ TEST set_flag()
 	return 0;
 }
 
+TEST same_prefix_long_opt()
+{
+	static const getopt_option_t bug_option_list[] = 
+	{
+		{ "input", 		   0x0, GETOPT_OPTION_TYPE_REQUIRED, 0x0, 'i', "help input", "input value" },
+		{ "input-variant", 0x0, GETOPT_OPTION_TYPE_REQUIRED, 0x0, 'I', "help input-variant", "input variant" },
+		GETOPT_OPTIONS_END
+	};
+
+	const char* argv[] = { "dummy_prog", "--input", "Input Value", "--input-variant", "Input Variant" };
+	int argc = (int)ARRAY_LENGTH( argv );
+
+	getopt_context_t ctx;
+	int err = getopt_create_context( &ctx, argc, argv, bug_option_list );
+	ASSERT_EQ( 0, err );
+
+	int opt;
+
+	int found_input = 0;
+	int found_input_variant = 0;
+
+	while( ( opt = getopt_next( &ctx ) ) != -1 )
+	{
+		switch( opt )
+		{
+			case 'i': { found_input = 1; ASSERT_STR_EQ("Input Value", ctx.current_opt_arg); break; }
+			case 'I': { found_input_variant = 1; ASSERT_STR_EQ("Input Variant", ctx.current_opt_arg); break; }
+			default:
+				{
+					static char fail_msg[512];
+					snprintf(fail_msg, sizeof(fail_msg), "unexpected op '%c' '%s'", opt, ctx.argv[ctx.current_index]);
+					FAILm(fail_msg);
+				}
+				break;
+		}
+	}
+
+	ASSERT_EQ(1, found_input);
+	ASSERT_EQ(1, found_input_variant);
+
+	return 0;
+}
+
 GREATEST_SUITE( getopt )
 {
 	RUN_TEST( short_opt );
@@ -357,6 +400,7 @@ GREATEST_SUITE( getopt )
 	RUN_TEST( non_arguments );
 	RUN_TEST( set_flag );
 	RUN_TEST( with_zero_args );
+	RUN_TEST( same_prefix_long_opt );
 }
 
 GREATEST_MAIN_DEFS();

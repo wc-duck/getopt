@@ -146,6 +146,9 @@ int getopt_next( getopt_context_t* ctx )
 
 			const getopt_option_t* opt = ctx->opts + i;
 
+			if(!opt->name)
+				continue;
+
 			unsigned int name_len = (unsigned int)strlen( opt->name );
 
 			if( str_case_cmp_len( opt->name, check_option, name_len ) == 0 )

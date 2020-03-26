@@ -421,6 +421,80 @@ TEST no_longopt_with_longopt()
 	return 0;
 }
 
+TEST capture_bad_longopt()
+{
+	const char* argv[] = { "dummy_prog", "--input" };
+	int argc = (int)ARRAY_LENGTH( argv );
+
+	{
+		static const getopt_option_t bug_option_list[] = 
+		{
+			// args are not allowed to begin with one '-'
+			{ "-bad", 0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'a', "help input", "input value" },
+			GETOPT_OPTIONS_END
+		};
+		
+		getopt_context_t ctx;
+		int err = getopt_create_context( &ctx, argc, argv, bug_option_list );
+		ASSERT_EQ( -1, err );
+	}
+
+	{
+		static const getopt_option_t bug_option_list[] = 
+		{
+			// args are not allowed to begin with two '-'
+			{ "--bad", 0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'a', "help input", "input value" },
+			GETOPT_OPTIONS_END
+		};
+		
+		getopt_context_t ctx;
+		int err = getopt_create_context( &ctx, argc, argv, bug_option_list );
+		ASSERT_EQ( -1, err );
+	}
+
+	// test for bad args in different positions.
+	{
+		static const getopt_option_t bug_option_list[] = 
+		{
+			{ "--bad", 0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'a', "help input", "input value" },
+			{ "i",     0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'b', "help input", "input value" },
+			GETOPT_OPTIONS_END
+		};
+		
+		getopt_context_t ctx;
+		int err = getopt_create_context( &ctx, argc, argv, bug_option_list );
+		ASSERT_EQ( -1, err );
+	}
+
+	{
+		static const getopt_option_t bug_option_list[] = 
+		{
+			{ "i",     0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'b', "help input", "input value" },
+			{ "--bad", 0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'a', "help input", "input value" },
+			GETOPT_OPTIONS_END
+		};
+		
+		getopt_context_t ctx;
+		int err = getopt_create_context( &ctx, argc, argv, bug_option_list );
+		ASSERT_EQ( -1, err );
+	}
+
+	{
+		static const getopt_option_t bug_option_list[] = 
+		{
+			{ "j",     0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'c', "help input", "input value" },
+			{ "--bad", 0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'a', "help input", "input value" },
+			{ "i",     0, GETOPT_OPTION_TYPE_NO_ARG, 0x0, 'b', "help input", "input value" },
+			GETOPT_OPTIONS_END
+		};
+		
+		getopt_context_t ctx;
+		int err = getopt_create_context( &ctx, argc, argv, bug_option_list );
+		ASSERT_EQ( -1, err );
+	}
+
+	return 0;
+}
 
 GREATEST_SUITE( getopt )
 {
@@ -436,6 +510,7 @@ GREATEST_SUITE( getopt )
 	RUN_TEST( with_zero_args );
 	RUN_TEST( same_prefix_long_opt );
 	RUN_TEST( no_longopt_with_longopt );
+	RUN_TEST( capture_bad_longopt );
 }
 
 GREATEST_MAIN_DEFS();

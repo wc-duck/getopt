@@ -83,6 +83,12 @@ int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, c
 			opt->value == -1)
 			return -1;
 
+		if( opt->name )
+		{
+			if( opt->name[0] == '-' )
+				return -1;
+		}
+
 		ctx->num_opts++; opt++;
 	}
 

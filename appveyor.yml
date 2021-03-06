@@ -20,9 +20,7 @@ install:
   - cd bam
   - make_win64_msvc.bat
   - cd ..
-  - bam\bam.exe config=%GETOPT_CONFIG%
-  - echo "local\%GETOPT_PLATFORM%\%GETOPT_CONFIG%\getopt_tests.exe"
-  - dir local\%GETOPT_PLATFORM%\%GETOPT_CONFIG%\
+  - bam\bam.exe platform=%GETOPT_PLATFORM% config=%GETOPT_CONFIG%
   - local\%GETOPT_PLATFORM%\%GETOPT_CONFIG%\getopt_tests.exe
 
 build: OFF

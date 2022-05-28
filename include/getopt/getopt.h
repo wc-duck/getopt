@@ -124,7 +124,7 @@ typedef struct getopt_context
 
 	/**
 	 * Used to return values. Will point to a string that is the argument to the currently parsed option.
-	 * I.e. when parsing '--my-flag whoppa_doppa", this will point to "whoppa doppa"
+	 * I.e. when parsing '--my-flag whoppa_doppa", this will point to "whoppa doppa".
 	 * 
 	 * If the option is of type GETOPT_OPTION_TYPE_OPTIONAL this will be set to NULL if there was no argument passed.
 	 */

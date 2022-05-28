@@ -68,7 +68,7 @@ extern "C" {
  *           case '?': printf( "unknown flag %s\n",                 ctx.current_opt_arg ); break;
  *           case '!': printf( "invalid use of flag %s\n",          ctx.current_opt_arg ); break;
  *           case 'i': printf( "got -i or --input with value %s\n", ctx.current_opt_arg ); break;
- *           case   0: printf( "flag '--%s' was set!\n", ctx.opts[ctx.current_index].name); break;
+ *           case   0: printf( "flag was set!\n"); break;
  *           case 'h': print_help_string( ctx ); break;
  *           default: break;
  *       }
@@ -120,7 +120,7 @@ typedef struct getopt_context
 	const char**           argv;            ///< Internal variable
 	const getopt_option_t* opts;            ///< pointer to 'opts' passed in getopt_create_context().
 	int                    num_opts;        ///< number of valid options in 'opts'
-	int                    current_index;   ///< current option currently being parsed, can be used to get the current flag being parsed.
+	int                    current_index;   ///< Internal variable
 	const char*            current_opt_arg; ///< Used to return values. See <getopt_next>
 } getopt_context_t;
 

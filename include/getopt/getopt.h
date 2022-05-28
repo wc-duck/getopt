@@ -121,7 +121,14 @@ typedef struct getopt_context
 	const getopt_option_t* opts;            ///< pointer to 'opts' passed in getopt_create_context().
 	int                    num_opts;        ///< number of valid options in 'opts'
 	int                    current_index;   ///< Internal variable
-	const char*            current_opt_arg; ///< Used to return values. See <getopt_next>
+
+	/**
+	 * Used to return values. Will point to a string that is the argument to the currently parsed option.
+	 * I.e. when parsing '--my-flag whoppa_doppa", this will point to "whoppa doppa"
+	 * 
+	 * If the option is of type GETOPT_OPTION_TYPE_OPTIONAL this will be set to NULL if there was no argument passed.
+	 */
+	const char*            current_opt_arg;
 } getopt_context_t;
 
 /**

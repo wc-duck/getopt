@@ -33,14 +33,23 @@ int g_flag = -1;
 
 static const getopt_option_t option_list[] = 
 {
-	{ "aaaa", 'a', GETOPT_OPTION_TYPE_NO_ARG,   0x0,      'a', "help a", 0 },
-	{ "bbbb", 'b', GETOPT_OPTION_TYPE_NO_ARG,   0x0,      'b', "help b", 0 },
-	{ "cccc", 'c', GETOPT_OPTION_TYPE_REQUIRED, 0x0,      'c', "help c", 0 },
-	{ "dddd", 'd', GETOPT_OPTION_TYPE_OPTIONAL, 0x0,      'd', "help d", 0 },
-	{ "eeee", 'e', GETOPT_OPTION_TYPE_FLAG_SET, &g_flag, 1337, "help e", 0 },
-	{ "ffff", 'f', GETOPT_OPTION_TYPE_FLAG_AND, &g_flag,    1, "help f", 0 },
-	{ "gggg", 'g', GETOPT_OPTION_TYPE_FLAG_OR , &g_flag,    1, "help g", 0 },
-	{ "hhhh", 'h', GETOPT_OPTION_TYPE_NO_ARG,   0x0,        0, "help h", 0 },
+	{ "aaaa", 'a', GETOPT_OPTION_TYPE_NO_ARG,          0x0,      'a', "help a", 0 },
+	{ "bbbb", 'b', GETOPT_OPTION_TYPE_NO_ARG,          0x0,      'b', "help b", 0 },
+	{ "cccc", 'c', GETOPT_OPTION_TYPE_REQUIRED,        0x0,      'c', "help c", 0 },
+	{ "dddd", 'd', GETOPT_OPTION_TYPE_OPTIONAL,        0x0,      'd', "help d", 0 },
+	{ "eeee", 'e', GETOPT_OPTION_TYPE_FLAG_SET,        &g_flag, 1337, "help e", 0 },
+	{ "ffff", 'f', GETOPT_OPTION_TYPE_FLAG_AND,        &g_flag,    1, "help f", 0 },
+	{ "gggg", 'g', GETOPT_OPTION_TYPE_FLAG_OR ,        &g_flag,    1, "help g", 0 },
+	{ "hhhh", 'h', GETOPT_OPTION_TYPE_NO_ARG,          0x0,        0, "help h", 0 },
+	GETOPT_OPTIONS_END
+};
+
+static const getopt_option_t parse_option_list[] = 
+{
+	{ "ri32", 'a', GETOPT_OPTION_TYPE_REQUIRED_INT32,  0x0,      'a', "help a", 0 },
+	{ "rf32", 'b', GETOPT_OPTION_TYPE_REQUIRED_FP32,   0x0,      'b', "help b", 0 },
+	{ "oi32", 'c', GETOPT_OPTION_TYPE_OPTIONAL_INT32,  0x0,      'c', "help c", 0 },
+	{ "of32", 'd', GETOPT_OPTION_TYPE_OPTIONAL_FP32,   0x0,      'd', "help d", 0 },
 	GETOPT_OPTIONS_END
 };
 
@@ -266,6 +275,176 @@ TEST optional_arg()
 	if( test_optional_arg( (int)ARRAY_LENGTH( argv2 ), argv2 ) != 0 ) return -1;
 	return 0;
 }
+
+static int test_parse_int(int argc, const char** argv, int expect)
+{
+	int default_value = -2;
+	int found_int = -1;
+
+	getopt_context_t ctx;
+	int err = getopt_create_context( &ctx, argc, argv, parse_option_list );
+	ASSERT_EQ( 0, err );
+
+	int opt;
+	while( ( opt = getopt_next( &ctx ) ) != -1 )
+	{
+		switch( opt )
+		{
+			case 'a': // required int
+			case 'c': // optional int
+				ASSERT_EQ(-1, found_int);
+
+				found_int = ctx.current_opt_arg
+								? ctx.current_value.i32 
+								: default_value;
+
+				if(opt == 'a') // required
+					ASSERT_FALSE(ctx.current_opt_arg == 0x0);
+
+				break;
+			case '!':
+				break;
+			default:
+				FAILm( "got an unexpected opt!" );
+				break;
+		}
+	}
+
+	ASSERT_EQ(found_int, expect);
+
+	return 0;
+}
+
+TEST int_arg()
+{
+	#define EXPECT_SUCCESS(value, ...)                                      \
+		{                                                                   \
+			const char* argv[] = { __VA_ARGS__ };                           \
+			int res = test_parse_int((int)ARRAY_LENGTH(argv), argv, value); \
+			if(res < 0)                                                     \
+				return res;                                                 \
+		}
+
+	#define EXPECT_FAIL(...) \
+		EXPECT_SUCCESS(-1, __VA_ARGS__)
+
+	// ... required int short ...
+	EXPECT_SUCCESS(  1337, "dummy_prog",     "-a",   "1337"); // ... dec ...
+	EXPECT_SUCCESS(0x1337, "dummy_prog",     "-a", "0x1337"); // ... hex ...
+	EXPECT_SUCCESS( 01337, "dummy_prog",     "-a",  "01337"); // ... oct ...
+
+	// ... optional int short ...
+	EXPECT_SUCCESS(  1337, "dummy_prog",     "-c",   "1337"); // ... dec ...
+	EXPECT_SUCCESS(0x1337, "dummy_prog",     "-c", "0x1337"); // ... hex ...
+	EXPECT_SUCCESS( 01337, "dummy_prog",     "-c",  "01337"); // ... oct ...
+	EXPECT_SUCCESS(    -2, "dummy_prog",     "-c");           // ... no value ...
+
+	// ... required int long ...
+	EXPECT_SUCCESS(  1337, "dummy_prog", "--ri32",   "1337"); // ... dec ...
+	EXPECT_SUCCESS(0x1337, "dummy_prog", "--ri32", "0x1337"); // ... hex ...
+	EXPECT_SUCCESS( 01337, "dummy_prog", "--ri32",  "01337"); // ... oct ...
+
+	// ... optional int long ...
+	EXPECT_SUCCESS(  1337, "dummy_prog", "--oi32",   "1337"); // ... dec ...
+	EXPECT_SUCCESS(0x1337, "dummy_prog", "--oi32", "0x1337"); // ... hex ...
+	EXPECT_SUCCESS( 01337, "dummy_prog", "--oi32",  "01337"); // ... oct ...
+	EXPECT_SUCCESS(    -2, "dummy_prog", "--oi32");           // ... long, optional int ...
+
+	EXPECT_FAIL( "dummy_prog", "-a" );                 // ... short, required int, missing arg ...
+	EXPECT_FAIL( "dummy_prog", "-a", "poop" );         // ... short, required int, invalid arg ...
+	EXPECT_FAIL( "dummy_prog", "-a", "1337poop" );     // ... short, required int, invalid arg that start of as valid ...
+	EXPECT_FAIL( "dummy_prog", "--ri32" );             // ... long, required int, missing arg ...
+	EXPECT_FAIL( "dummy_prog", "--ri32", "poop" );     // ... long, required int, invalid arg ...
+	EXPECT_FAIL( "dummy_prog", "--ri32", "1337poop" ); // ... long, required int, invalid arg that start of as valid ...
+
+	#undef EXPECT_FAIL
+	#undef EXPECT_SUCCESS
+
+	return 0;
+}
+
+static int test_parse_fp32(int argc, const char** argv, float expect)
+{
+	float default_value = -2.0f;
+	float found_fp32 = -1.0f;
+
+	getopt_context_t ctx;
+	int err = getopt_create_context( &ctx, argc, argv, parse_option_list );
+	ASSERT_EQ( 0, err );
+
+	int opt;
+	while( ( opt = getopt_next( &ctx ) ) != -1 )
+	{
+		switch( opt )
+		{
+			case 'b': // required fp
+			case 'd': // optional fp
+			 	ASSERT_EQ(-1.0f, found_fp32);
+
+				found_fp32 = ctx.current_opt_arg 
+								? ctx.current_value.fp32
+								: default_value;
+
+				if(opt == 'b') // required
+					ASSERT_FALSE(ctx.current_opt_arg == 0x0);
+
+				break;
+			case '!':
+				break;
+			default:
+				FAILm( "got an unexpected opt!" );
+				break;
+		}
+	}
+
+	ASSERT_EQ(found_fp32, expect);
+
+	return 0;
+}
+
+TEST fp32_arg()
+{
+	#define EXPECT_SUCCESS(value, ...)                                       \
+		{                                                                    \
+			const char* argv[] = { __VA_ARGS__ };                            \
+			int res = test_parse_fp32((int)ARRAY_LENGTH(argv), argv, value); \
+			if(res < 0)                                                      \
+				return res;                                                  \
+		}
+
+	#define EXPECT_FAIL(...) \
+		EXPECT_SUCCESS(-1, __VA_ARGS__)
+
+	// ... required fp32 short ...
+	EXPECT_SUCCESS(1337.0f, "dummy_prog",     "-b",  "1337"); // ... dec ...
+	EXPECT_SUCCESS( 13.37f, "dummy_prog",     "-b", "13.37"); // ... fp ...
+
+	// ... optional fp32 short ...
+	EXPECT_SUCCESS(1337.0f, "dummy_prog",     "-d",  "1337"); // ... dec ...
+	EXPECT_SUCCESS( 13.37f, "dummy_prog",     "-d", "13.37"); // ... hex ...
+	EXPECT_SUCCESS(  -2.0f, "dummy_prog",     "-d");          // ... no value ...
+
+	// ... required fp32 long ...
+	EXPECT_SUCCESS(1337.0f, "dummy_prog", "--rf32",  "1337"); // ... dec ...
+	EXPECT_SUCCESS( 13.37f, "dummy_prog", "--rf32", "13.37"); // ... hex ...
+
+	// ... optional fp32 long ...
+	EXPECT_SUCCESS(1337.0f, "dummy_prog", "--of32",  "1337"); // ... dec ...
+	EXPECT_SUCCESS( 13.37f, "dummy_prog", "--of32", "13.37"); // ... hex ...
+	EXPECT_SUCCESS(  -2.0f, "dummy_prog", "--of32");          // ... long, optional int ...
+
+	EXPECT_FAIL( "dummy_prog", "-b" );                 // ... short, required int, missing arg ...
+	EXPECT_FAIL( "dummy_prog", "-b", "poop" );         // ... short, required int, invalid arg ...
+	EXPECT_FAIL( "dummy_prog", "-b", "1337poop" );     // ... short, required int, invalid arg that start of as valid ...
+	EXPECT_FAIL( "dummy_prog", "--rf32" );             // ... long, required int, missing arg ...
+	EXPECT_FAIL( "dummy_prog", "--rf32", "poop" );     // ... long, required int, invalid arg ...
+	EXPECT_FAIL( "dummy_prog", "--rf32", "1337poop" ); // ... long, required int, invalid arg that start of as valid ...
+
+	#undef EXPECT_FAIL
+	#undef EXPECT_SUCCESS
+
+	return 0;
+};
 
 TEST non_arguments()
 {
@@ -505,6 +684,8 @@ GREATEST_SUITE( getopt )
 	RUN_TEST( with_args_short_after_long );
 	RUN_TEST( missing_arg_short );
 	RUN_TEST( optional_arg );
+	RUN_TEST( int_arg );
+	RUN_TEST( fp32_arg );
 	RUN_TEST( non_arguments );
 	RUN_TEST( set_flag );
 	RUN_TEST( with_zero_args );

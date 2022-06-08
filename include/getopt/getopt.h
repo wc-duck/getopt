@@ -80,12 +80,16 @@ extern "C" {
  */
 typedef enum getopt_option_type
 {
-	GETOPT_OPTION_TYPE_NO_ARG,   ///< The option can have no argument
-	GETOPT_OPTION_TYPE_REQUIRED, ///< The option requires an argument (--option=arg, -o arg)
-	GETOPT_OPTION_TYPE_OPTIONAL, ///< The option-argument is optional
-	GETOPT_OPTION_TYPE_FLAG_SET, ///< The option is a flag and value will be set to flag
-	GETOPT_OPTION_TYPE_FLAG_AND, ///< The option is a flag and value will be and:ed with flag
-	GETOPT_OPTION_TYPE_FLAG_OR   ///< The option is a flag and value will be or:ed with flag
+	GETOPT_OPTION_TYPE_NO_ARG,         ///< The option can have no argument
+	GETOPT_OPTION_TYPE_REQUIRED,       ///< The option requires an argument (--option=arg, -o arg)
+	GETOPT_OPTION_TYPE_OPTIONAL,       ///< The option-argument is optional
+	GETOPT_OPTION_TYPE_REQUIRED_INT32, ///< The option requires an argument and this argument has to be parseable as an int (--option=arg, -o arg)
+	GETOPT_OPTION_TYPE_OPTIONAL_INT32, ///< The option-argument is optional, but if it is there it has to be parseable as int.
+	GETOPT_OPTION_TYPE_REQUIRED_FP32,  ///< The option requires an argument and this argument has to be parseable as an float (--option=arg, -o arg)
+	GETOPT_OPTION_TYPE_OPTIONAL_FP32,  ///< The option-argument is optional, but if it is there it has to be parseable as float.
+	GETOPT_OPTION_TYPE_FLAG_SET,       ///< The option is a flag and value will be set to flag
+	GETOPT_OPTION_TYPE_FLAG_AND,       ///< The option is a flag and value will be and:ed with flag
+	GETOPT_OPTION_TYPE_FLAG_OR         ///< The option is a flag and value will be or:ed with flag
 } getopt_option_type_t;
 
 /**
@@ -129,6 +133,29 @@ typedef struct getopt_context
 	 * If the option is of type GETOPT_OPTION_TYPE_OPTIONAL this will be set to NULL if there was no argument passed.
 	 */
 	const char*            current_opt_arg;
+
+	/**
+	 * Union storeing parsed values if that is requested by the option-type.
+	 * @note on parse-errors '!' will be returned from getopt_next() and current_opt_arg will be set to the name
+	 *       of the option that failed to parse.
+	 * @note if the option is 'optional' and there was no arg, current_opt_arg will be 0x0.
+	 */
+	union
+	{
+		/**
+		 * if the option is on type GETOPT_OPTION_TYPE_OPTIONAL_INT or GETOPT_OPTION_TYPE_REQUIRED_INT and it parsed
+		 * successfully the value will be stored here.
+		 * supported int formats are, decimal, hex and octal (123, 0x123, 0123)
+		 */
+		int   i32;
+
+		/**
+		 * if the option is on type GETOPT_OPTION_TYPE_OPTIONAL_FP32 or GETOPT_OPTION_TYPE_REQUIRED_FP32 and it parsed
+		 * successfully the value will be stored here.
+		 */
+		float fp32;
+	} current_value;
+
 } getopt_context_t;
 
 /**

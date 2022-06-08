@@ -28,6 +28,7 @@
 
 #include <stdio.h>  /* for vsnprintf */
 #include <stdarg.h> /* for va_list */
+#include <stdlib.h> /* atoi */
 #include <string.h>
 #if !defined(_MSC_VER)
 #   include <strings.h> /* for strncasecmp */
@@ -95,6 +96,48 @@ int getopt_create_context( getopt_context_t* ctx, int argc, const char** argv, c
 	return 0;
 }
 
+static int getopt_opt_might_have_arg( const getopt_option_t* opt )
+{
+	switch(opt->type)
+	{
+		case GETOPT_OPTION_TYPE_OPTIONAL:
+		case GETOPT_OPTION_TYPE_OPTIONAL_INT32:
+		case GETOPT_OPTION_TYPE_OPTIONAL_FP32:
+		case GETOPT_OPTION_TYPE_REQUIRED:
+		case GETOPT_OPTION_TYPE_REQUIRED_INT32:
+		case GETOPT_OPTION_TYPE_REQUIRED_FP32:
+			return 1;
+		default:
+			return 0;
+	}
+	return 0;
+}
+
+static int getopt_read_value(getopt_context_t* ctx, const getopt_option_t* found_opt)
+{
+	char* end = 0x0;
+	switch(found_opt->type)
+	{
+		case GETOPT_OPTION_TYPE_OPTIONAL_INT32:
+		case GETOPT_OPTION_TYPE_REQUIRED_INT32:
+			ctx->current_value.i32 = (int)strtol(ctx->current_opt_arg, &end, 0);
+			break;
+		case GETOPT_OPTION_TYPE_OPTIONAL_FP32:
+		case GETOPT_OPTION_TYPE_REQUIRED_FP32:
+			ctx->current_value.fp32 = strtof(ctx->current_opt_arg, &end);
+			break;
+		default:
+			break;
+	}
+
+	if(*end != '\0')
+	{
+		ctx->current_opt_arg = found_opt->name;
+		return '!';
+	}
+	return found_opt->value;
+}
+
 int getopt_next( getopt_context_t* ctx )
 {
 	/* are all options processed? */
@@ -133,7 +176,7 @@ int getopt_next( getopt_context_t* ctx )
 
 				/* if there is an value when: - current_index < argc and value in argv[current_index] do not start with '-' */
 				if( ( ( ctx->current_index != ctx->argc) && ( ctx->argv[ctx->current_index][0] != '-' ) ) && 
-					  ( opt->type == GETOPT_OPTION_TYPE_OPTIONAL || opt->type == GETOPT_OPTION_TYPE_REQUIRED ) )
+					  getopt_opt_might_have_arg(opt) )
 				{
 					found_arg = ctx->argv[ctx->current_index];
 					ctx->current_index++; /* next token has been processed aswell! */
@@ -218,6 +261,8 @@ int getopt_next( getopt_context_t* ctx )
 
 	if(found_arg != 0x0)
 	{
+		ctx->current_opt_arg = found_arg;
+
 		switch(found_opt->type)
 		{
 			case GETOPT_OPTION_TYPE_FLAG_SET:
@@ -230,8 +275,12 @@ int getopt_next( getopt_context_t* ctx )
 
 			case GETOPT_OPTION_TYPE_OPTIONAL:
 			case GETOPT_OPTION_TYPE_REQUIRED:
-				ctx->current_opt_arg = found_arg;
 				return found_opt->value;
+			case GETOPT_OPTION_TYPE_OPTIONAL_INT32:
+			case GETOPT_OPTION_TYPE_REQUIRED_INT32:
+			case GETOPT_OPTION_TYPE_OPTIONAL_FP32:
+			case GETOPT_OPTION_TYPE_REQUIRED_FP32:
+				return getopt_read_value(ctx, found_opt);
 		}
 	}
 	/* no argument found */
@@ -245,12 +294,16 @@ int getopt_next( getopt_context_t* ctx )
 			
 			case GETOPT_OPTION_TYPE_NO_ARG:
 			case GETOPT_OPTION_TYPE_OPTIONAL:
+			case GETOPT_OPTION_TYPE_OPTIONAL_INT32:
+			case GETOPT_OPTION_TYPE_OPTIONAL_FP32:
 				return found_opt->value;
 
 			/* the option requires an argument! (--option=arg, -o arg) */
 			case GETOPT_OPTION_TYPE_REQUIRED:
-					ctx->current_opt_arg = found_opt->name;
-					return '!';
+			case GETOPT_OPTION_TYPE_REQUIRED_INT32:
+			case GETOPT_OPTION_TYPE_REQUIRED_FP32:
+				ctx->current_opt_arg = found_opt->name;
+				return '!';
 		}
 	}
 

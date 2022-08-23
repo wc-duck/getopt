@@ -484,6 +484,54 @@ TEST non_arguments()
 	return 0;
 }
 
+TEST non_arguments_for_no_args_flags()
+{
+	// test that flag that should have no args pass 'non_args' correctly ...
+	const char* argv[] = { "dummy_prog", "-a", "non_arg1", "--bbbb", "non_arg2" };
+	int argc = (int)ARRAY_LENGTH( argv );
+
+	const char* args[2]      = { "fill1", "fill2" };
+	const char* non_args[2]  = { "fill3", "fill4" };
+	int args_count     = 0;
+	int non_args_count = 0;
+
+	getopt_context_t ctx;
+	int err = getopt_create_context( &ctx, argc, argv, option_list );
+	ASSERT_EQ( 0, err );
+
+	int opt;
+	while( ( opt = getopt_next( &ctx ) ) != -1 )
+	{
+		switch( opt )
+		{
+			case 'a':
+				args[args_count++] = "a";
+				ASSERT_EQ(nullptr, ctx.current_opt_arg);
+				break;
+			case 'b':
+				args[args_count++] = "b";
+				ASSERT_EQ(nullptr, ctx.current_opt_arg);
+				break;
+			case '+':
+				non_args[non_args_count++] = ctx.current_opt_arg;
+				break;
+			default:
+				printf("opt == '%c'\n", opt);
+				FAILm("got an unexpected opt!");
+				break;
+		}
+	}
+
+	ASSERT_EQ(2, args_count);
+	ASSERT_EQ(2, non_args_count);
+	ASSERT_STR_EQ("a", args[0]);
+	ASSERT_STR_EQ("b", args[1]);
+	ASSERT_STR_EQ("non_arg1", non_args[0]);
+	ASSERT_STR_EQ("non_arg2", non_args[1]);
+
+	return 0;
+}
+
 TEST set_flag()
 {
 	g_flag = -1;
@@ -549,11 +597,10 @@ TEST same_prefix_long_opt()
 	{
 		switch( opt )
 		{
-			case 'i': { found_input = 1; ASSERT_STR_EQ("Input Value", ctx.current_opt_arg); break; }
+			case 'i': { found_input = 1;         ASSERT_STR_EQ("Input Value",   ctx.current_opt_arg); break; }
 			case 'I': { found_input_variant = 1; ASSERT_STR_EQ("Input Variant", ctx.current_opt_arg); break; }
 			default:
-
-			        FAILm( "got an unexpected opt!" );
+			    FAILm( "got an unexpected opt!" );
 				break;
 		}
 	}
@@ -687,6 +734,7 @@ GREATEST_SUITE( getopt )
 	RUN_TEST( int_arg );
 	RUN_TEST( fp32_arg );
 	RUN_TEST( non_arguments );
+	RUN_TEST( non_arguments_for_no_args_flags );
 	RUN_TEST( set_flag );
 	RUN_TEST( with_zero_args );
 	RUN_TEST( same_prefix_long_opt );
